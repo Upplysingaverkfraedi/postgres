@@ -138,8 +138,8 @@ Hægt er að tengja saman upplýsingar frá ólíkum skemum (_schema_) innan sam
 líka mögulegt að tengja saman gögn frá mismunandi gagnagrunnum ef þeir eru **tengdir saman** í
 sama umhverfi.
 
-Í PostgreSQL þá er oft talað um að *upserta* sem er raunverulega skipun sem er til staðar í SQL 
-standardinum. Það er í raun `INSERT` skipun sem bætir við gögnum ef þau eru ekki til staðar, 
+Í PostgreSQL þá er oft talað um að *upserta* sem er raunverulega skipun sem er til staðar í SQL
+standardinum. Það er í raun `INSERT` skipun sem bætir við gögnum ef þau eru ekki til staðar,
 annars uppfærir þau. Það er ekki gert með `UPSERT` skipun heldur með `INSERT ... ON CONFLICT ...`.
 
 1. Skrifið SQL fyrirspurn sem finnur samsvörun á milli **ríkja** í *Game of Thrones* heiminum
@@ -241,53 +241,4 @@ interactive kort, sem lítur einhvern veginn svona:
 Skrifaðu _eina_ SQL fyrirspurn sem finnur sjaldgæfustu staðsetningategund (`location_type`) utan
 _The Seven Kingdoms_ (hér ættu einnig að koma staðir eins og í Essos, þ.e.a.s. utan Westeros),
 og hvaða _heita_ staðirnir sem tilheyra þeirri tegund?
-
-### 3. Endurskrifa lið 2. sem fall sem skilar töflu
-
-* Búið til PostgreSQL function `<teymi>.get_kingdom_locations_count(int kingdom_id, location_type 
-type)` sem skilar **töflu** með fjölda staðsetninga og lista yfir `gid` fyrir
-  allar staðsetningar af ákveðnum flokki (eða öllum ef enginn flokkur er uppgefinn) í tilteknu
-  konungsríki.
-
-    - Fallið ætti að skila niðurstöðutöflu með tveimur dálkum:
-        1. `location_count` - fjöldi staðsetninga, `integer`.
-        2. `location_ids` - fylki af `gid`-um (staðsetningum) sem tilheyra þessum flokki,
-           `integer[]`.
-
-* Skrifaðu svo *eina* SQL fyrirspurn sem notar fallið til að svara sömu spurningum og í lið 2. Hér
-  þarf að nota CTE til að kalla á fallið fyrir hvert konungsríki og flokk af staðsetningum.
-
-* Passið að niðurstöðurnar passi við þær sem fenguðust í lið 2. Hvor aðgerðin var *dýrari*? Hvers
-  vegna?
-
-> Þessi liður er reyndar óþarflega flókin leið til að fá sömu niðurstöður og var fengin í lið 2.
-> Aftur á móti er þetta góð æfing í að vinna með föll sem skila töflum og hvernig á að nota þau í
-> SQL fyrirspurnum.
-
-#### Hint fyrir lið 3
-
-1. **Hvernig á að nota `get_kingdom_locations_count`**:
-    - Kallið á fallið fyrir hvert konungsríki með tiltekinni staðsetningategund, eða án flokks til
-      að fá allar staðsetningar.
-    - **Hint:** Þegar `region_id` er `NULL`, þá færðu staðsetningar utan allra konungsríkja.
-
-2. **Nota `LATERAL JOIN` til að fá niðurstöður frá fallinu**:
-    - Með `LATERAL JOIN` getið þið keyrt `get_kingdom_locations_count` fyrir hverja tegund af
-      staðsetningum.
-    - **Hint:** Notið `CROSS JOIN LATERAL` til að nota fallið í samhengi við mismunandi
-      staðsetningategundir.
-
-3. **Reiknið staðsetningar utan The Seven Kingdoms**:
-    - Þið getið fundið heildarniðurstöður fyrir allan heiminn (með því að setja `NULL` í
-      `kingdom_id`) og dregið svo frá niðurstöður fyrir sérhvert sjö konungsríkjana, það gefur
-      ykkur fjölda staðsetninga utan The Seven Kingdoms.
-
-4. **Sameinið fylki af `gid` með `array_union_agg()`**:
-    - Til að sameina fylki af `gid` gildi og forðast tvítekin gildi, notið
-      `public.array_union_agg()`.
-    - `array_union_agg()` sameinar fylki með því að fjarlægja tvíteknar línur í sameinuðu fylki.
-
-5. **Notið `unnest()` til að fá staðarnöfn fyrir `gid`**:
-    - Eftir að þið hafið fundið staði utan *The Seven Kingdoms*, notið `unnest()` til að brjóta
-      niður fylkið af `gid`-um og tengja þau við staðarnöfn úr `atlas.locations`.
 
